@@ -6,12 +6,14 @@ version: 1.0.0+1
 environment:
   sdk: ">=3.3.0 <4.0.0"
 
+
 dependencies:
   flutter:
     sdk: flutter
   speech_to_text: ^7.0.0
   flutter_secure_storage: ^9.2.2
-    http:  ^1.5.0
+  http: ^1.5.0
+  
 
 dev_dependencies:
   flutter_test:
