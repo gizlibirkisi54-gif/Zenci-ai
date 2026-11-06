@@ -27,6 +27,11 @@ jobs:
 
       - name: Android proje dosyalarını oluştur
         run: flutter create --platforms=android .
+        
+      - name: Android internet iznini ekle
+        run: |
+          python3 -c "from pathlib import Path; p=Path('android/app/src/main/AndroidManifest.xml'); s=p.read_text(); permission='<uses-permission android:name=\"android.permission.INTERNET\"/>'; s=s.replace('<application', permission+'\n    <application', 1); p.write_text(s)"
+          
 
       - name: Assets klasörünü hazırla
         run: mkdir -p assets
