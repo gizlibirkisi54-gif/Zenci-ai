@@ -38,4 +38,4 @@ steps:
     uses: actions/upload-artifact@v4
     with:
       name: Zenci-AI-APK
-      path: build/app/outputs/flutter-apk/app-release.apk
+      path: build/app/outputs/flutter-apk/app-release.apk 
