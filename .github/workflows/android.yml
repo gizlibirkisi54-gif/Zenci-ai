@@ -1,0 +1,41 @@
+name: Zenci AI APK Build
+
+on:
+workflow_dispatch:
+push:
+branches:
+- main
+
+jobs:
+build:
+runs-on: ubuntu-latest
+
+steps:
+  - name: Projeyi indir
+    uses: actions/checkout@v4
+
+  - name: Java 17 kur
+    uses: actions/setup-java@v4
+    with:
+      distribution: temurin
+      java-version: "17"
+
+  - name: Flutter kur
+    uses: subosito/flutter-action@v2
+    with:
+      channel: stable
+
+  - name: Android proje dosyalarını oluştur
+    run: flutter create --platforms=android .
+
+  - name: Paketleri yükle
+    run: flutter pub get
+
+  - name: APK derle
+    run: flutter build apk --release
+
+  - name: APK dosyasını hazırla
+    uses: actions/upload-artifact@v4
+    with:
+      name: Zenci-AI-APK
+      path: build/app/outputs/flutter-apk/app-release.apk
