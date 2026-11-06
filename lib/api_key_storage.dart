@@ -5,25 +5,45 @@ class ApiKeyStorage {
   static const FlutterSecureStorage _storage =
       FlutterSecureStorage();
 
-  static const String _keyName = 'gemini_api_key';
-
   Future<void> save(String apiKey) async {
-    await _storage.write(
-      key: _keyName,
-      value: apiKey.trim(),
-    );
+    await saveGemini(apiKey);
   }
 
   Future<String?> read() async {
-    return await _storage.read(key: _keyName);
+    return readGemini();
   }
 
   Future<void> delete() async {
-    await _storage.delete(key: _keyName);
+    await deleteGemini();
   }
 
-  Future<bool> hasKey() async {
-    final key = await read();
-    return key != null && key.isNotEmpty;
+  Future<void> saveGemini(String key) async {
+    await _storage.write(
+      key: 'gemini_api_key',
+      value: key.trim(),
+    );
+  }
+
+  Future<String?> readGemini() async {
+    return _storage.read(key: 'gemini_api_key');
+  }
+
+  Future<void> deleteGemini() async {
+    await _storage.delete(key: 'gemini_api_key');
+  }
+
+  Future<void> saveClaude(String key) async {
+    await _storage.write(
+      key: 'claude_api_key',
+      value: key.trim(),
+    );
+  }
+
+  Future<String?> readClaude() async {
+    return _storage.read(key: 'claude_api_key');
+  }
+
+  Future<void> deleteClaude() async {
+    await _storage.delete(key: 'claude_api_key');
   }
 }
