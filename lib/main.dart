@@ -93,66 +93,84 @@ class _HomePageState extends State<HomePage>
     super.dispose();
   }
 
-  Future<void> sendMessage(String value) async {
-    final message = value.trim();
 
-    if (message.isEmpty || loading) return;
+Future<void> sendMessage(String value) async {
+  final message = value.trim();
 
-    controller.clear();
+  if (message.isEmpty || loading) return;
 
-    setState(() {
-      messages.add({
-        'role': 'user',
-        'text': message,
-      });
-      loading = true;
+  controller.clear();
+
+  setState(() {
+    messages.add({
+      'role': 'user',
+      'text': message,
     });
+    loading = true;
+  });
 
-    scrollToBottom();
+  scrollToBottom();
 
-    try {
-      final apiKey = await storage.read();
+  try {
+    final provider = await storage.readProvider();
 
-      if (apiKey == null || apiKey.isEmpty) {
-        throw Exception(
-          'Önce Ayarlar bölümünden Gemini API anahtarını kaydet.'
-        );
-      }
+    final apiKey = provider == 'claude'
+        ? await storage.readClaude()
+        : await storage.readGemini();
 
-      final history = messages
-          .take(messages.length - 1)
-          .toList();
+    if (apiKey == null || apiKey.trim().isEmpty) {
+      throw Exception(
+        provider == 'claude'
+            ? 'Önce ayarlardan Claude API anahtarını kaydet.'
+            : 'Önce ayarlardan Gemini API anahtarını kaydet.',
+      );
+    }
 
-      final answer = await gemini.sendMessage(
+    final history = messages
+        .take(messages.length - 1)
+        .toList();
+
+    late final String answer;
+
+    if (provider == 'claude') {
+      answer = await claude.sendMessage(
+        apiKey: apiKey,
+        prompt: message,
+        history: history,
+      );
+    } else {
+      answer = await gemini.sendMessage(
         apiKey: apiKey,
         message: message,
         history: history,
       );
+    }
 
-      if (!mounted) return;
+    if (!mounted) return;
 
-      setState(() {
-        messages.add({
-          'role': 'assistant',
-          'text': answer,
-        });
+    setState(() {
+      messages.add({
+        'role': 'assistant',
+        'text': answer,
       });
-    } catch (e) {
-      if (!mounted) return;
+    });
+  } catch (e) {
+    if (!mounted) return;
 
-      setState(() {
-        messages.add({
-          'role': 'assistant',
-          'text': 'Bir sorun oluştu: ${e.toString()}',
-        });
+    setState(() {
+      messages.add({
+        'role': 'assistant',
+        'text': 'Bir sorun oluştu: ${e.toString()}',
       });
-    } finally {
-      if (mounted) {
-        setState(() => loading = false);
-        scrollToBottom();
-      }
+    });
+  } finally {
+    if (mounted) {
+      setState(() => loading = false);
+      scrollToBottom();
     }
   }
+}
+  
 
   void scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
