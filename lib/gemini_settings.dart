@@ -18,98 +18,44 @@ class _GeminiSettingsState extends State<GeminiSettings> {
   final TextEditingController claudeController =
       TextEditingController();
 
-  bool loading = true;
-  bool hideGemini = true;
-  bool hideClaude = true;
-
-  String status = '';
+  String selectedProvider = 'gemini';
+  bool isLoading = true;
+  bool hideGeminiKey = true;
+  bool hideClaudeKey = true;
 
   @override
   void initState() {
     super.initState();
-    loadKeys();
+    loadSettings();
   }
 
-  Future<void> loadKeys() async {
+  Future<void> loadSettings() async {
     final gemini = await storage.readGemini();
     final claude = await storage.readClaude();
+    final provider = await storage.readProvider();
 
     if (!mounted) return;
 
     setState(() {
       geminiController.text = gemini ?? '';
       claudeController.text = claude ?? '';
-      loading = false;
+      selectedProvider = provider;
+      isLoading = false;
     });
   }
 
-  Future<void> saveKeys() async {
-    try {
-      await storage.saveGemini(geminiController.text);
-      await storage.saveClaude(claudeController.text);
+  Future<void> saveSettings() async {
+    await storage.saveGemini(geminiController.text);
+    await storage.saveClaude(claudeController.text);
+    await storage.saveProvider(selectedProvider);
 
-      if (!mounted) return;
+    if (!mounted) return;
 
-      setState(() {
-        status = 'API anahtarları kaydedildi.';
-      });
-    } catch (e) {
-      if (!mounted) return;
-
-      setState(() {
-        status = 'Kaydetme hatası: $e';
-      });
-    }
-  }
-
-  Widget apiField({
-    required String title,
-    required String subtitle,
-    required TextEditingController controller,
-    required bool hidden,
-    required VoidCallback toggle,
-    required IconData icon,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(icon, color: const Color(0xffed1c35)),
-            const SizedBox(width: 10),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 5),
-        Text(
-          subtitle,
-          style: const TextStyle(color: Colors.grey, fontSize: 12),
-        ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: controller,
-          obscureText: hidden,
-          decoration: InputDecoration(
-            hintText: 'API anahtarını gir...',
-            filled: true,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            suffixIcon: IconButton(
-              onPressed: toggle,
-              icon: Icon(
-                hidden ? Icons.visibility : Icons.visibility_off,
-              ),
-            ),
-          ),
-        ),
-      ],
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Ayarlar kaydedildi.'),
+        backgroundColor: Colors.green,
+      ),
     );
   }
 
@@ -122,78 +68,167 @@ class _GeminiSettingsState extends State<GeminiSettings> {
 
   @override
   Widget build(BuildContext context) {
+    const red = Color(0xFFE50914);
+    const background = Color(0xFF101010);
+
+    if (isLoading) {
+      return const Scaffold(
+        backgroundColor: background,
+        body: Center(
+          child: CircularProgressIndicator(color: red),
+        ),
+      );
+    }
+
     return Scaffold(
+      backgroundColor: background,
       appBar: AppBar(
-        title: const Text('Yapay Zekâ Bağlantıları'),
+        title: const Text('Yapay Zekâ Ayarları'),
+        backgroundColor: background,
+        foregroundColor: Colors.white,
       ),
-      body: loading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(20),
-              children: [
-                const Text(
-                  'ZENCİ AI MOTORLARI',
-                  style: TextStyle(
-                    color: Color(0xffed1c35),
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 2,
-                  ),
-                ),
-                const SizedBox(height: 25),
-
-                apiField(
-                  title: 'Google Gemini',
-                  subtitle: 'Gemini API bağlantı anahtarı',
-                  controller: geminiController,
-                  hidden: hideGemini,
-                  toggle: () {
-                    setState(() => hideGemini = !hideGemini);
-                  },
-                  icon: Icons.auto_awesome,
-                ),
-
-                const SizedBox(height: 30),
-
-                apiField(
-                  title: 'Anthropic Claude',
-                  subtitle: 'Claude API bağlantı anahtarı',
-                  controller: claudeController,
-                  hidden: hideClaude,
-                  toggle: () {
-                    setState(() => hideClaude = !hideClaude);
-                  },
-                  icon: Icons.psychology,
-                ),
-
-                const SizedBox(height: 30),
-
-                SizedBox(
-                  height: 52,
-                  child: ElevatedButton(
-                    onPressed: saveKeys,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xffed1c35),
-                      foregroundColor: Colors.white,
-                    ),
-                    child: const Text(
-                      'BAĞLANTILARI KAYDET',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 15),
-
-                Center(
-                  child: Text(
-                    status,
-                    style: const TextStyle(color: Colors.green),
-                  ),
-                ),
-              ],
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          const Text(
+            'AKTİF YAPAY ZEKÂ',
+            style: TextStyle(
+              color: red,
+              fontWeight: FontWeight.bold,
             ),
+          ),
+          const SizedBox(height: 12),
+
+          DropdownButtonFormField<String>(
+            value: selectedProvider,
+            dropdownColor: const Color(0xFF222222),
+            style: const TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: const Color(0xFF222222),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            items: const [
+              DropdownMenuItem(
+                value: 'gemini',
+                child: Text('Google Gemini'),
+              ),
+              DropdownMenuItem(
+                value: 'claude',
+                child: Text('Anthropic Claude'),
+              ),
+            ],
+            onChanged: (value) {
+              if (value == null) return;
+              setState(() {
+                selectedProvider = value;
+              });
+            },
+          ),
+
+          const SizedBox(height: 30),
+
+          const Text(
+            'GEMINI API KEY',
+            style: TextStyle(
+              color: red,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          TextField(
+            controller: geminiController,
+            obscureText: hideGeminiKey,
+            style: const TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              hintText: 'Gemini API anahtarını gir',
+              hintStyle: const TextStyle(color: Colors.white38),
+              filled: true,
+              fillColor: const Color(0xFF222222),
+              suffixIcon: IconButton(
+                icon: Icon(
+                  hideGeminiKey
+                      ? Icons.visibility
+                      : Icons.visibility_off,
+                  color: Colors.white70,
+                ),
+                onPressed: () {
+                  setState(() {
+                    hideGeminiKey = !hideGeminiKey;
+                  });
+                },
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 25),
+
+          const Text(
+            'CLAUDE API KEY',
+            style: TextStyle(
+              color: red,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          TextField(
+            controller: claudeController,
+            obscureText: hideClaudeKey,
+            style: const TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              hintText: 'Claude API anahtarını gir',
+              hintStyle: const TextStyle(color: Colors.white38),
+              filled: true,
+              fillColor: const Color(0xFF222222),
+              suffixIcon: IconButton(
+                icon: Icon(
+                  hideClaudeKey
+                      ? Icons.visibility
+                      : Icons.visibility_off,
+                  color: Colors.white70,
+                ),
+                onPressed: () {
+                  setState(() {
+                    hideClaudeKey = !hideClaudeKey;
+                  });
+                },
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 35),
+
+          SizedBox(
+            height: 52,
+            child: ElevatedButton(
+              onPressed: saveSettings,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: red,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'AYARLARI KAYDET',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
