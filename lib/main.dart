@@ -66,6 +66,7 @@ class _HomePageState extends State<HomePage>
   final List<Map<String, String>> messages = [];
 
   final GeminiService gemini = GeminiService();
+  final ClaudeService claude = ClaudeService();
   final ApiKeyStorage storage = ApiKeyStorage();
 
   late AnimationController animation;
