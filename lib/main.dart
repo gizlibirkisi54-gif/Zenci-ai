@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'gemini_service.dart';
 import 'gemini_settings.dart';
 import 'api_key_storage.dart';
+import 'claude_service.dart';
 
 void main() {
   runApp(const ZenciAI());
