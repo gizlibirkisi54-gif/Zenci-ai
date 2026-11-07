@@ -46,7 +46,7 @@ class ApiKeyStorage {
   Future<void> deleteClaude() async {
     await _storage.delete(key: 'claude_api_key');
   }
-}
+
   Future<void> saveProvider(String provider) async {
     await _storage.write(
       key: 'active_ai_provider',
@@ -60,4 +60,4 @@ class ApiKeyStorage {
         ) ??
         'gemini';
   }
-  
+}
